@@ -177,7 +177,7 @@ function convertTestDepGraphResultToLegacy(res, depGraph: depGraphLib.DepGraph):
         annotatedIssue.isPatchable = depIssues[issueId].fixInfo.isPatchable; // TODO: test this
         annotatedIssue.name = pkg.name;
         annotatedIssue.version = pkg.version;
-        legacyRes.vulnerabilities.push(partialIssue);
+        legacyRes.vulnerabilities.push(annotatedIssue);
       });
     });
   });
