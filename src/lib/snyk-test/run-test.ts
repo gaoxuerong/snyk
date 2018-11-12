@@ -171,7 +171,7 @@ function convertTestDepGraphResultToLegacy(res, depGraph: depGraphLib.DepGraph):
 
         // TODO: this can cause OOM ...
         //   need to see how to now allocate to much but still create a full `--json` output
-        const upgradePath = upgradePathsMap[key];
+        const upgradePath = upgradePathsMap[key]; // TODO)michael-go): what should it be if no upgrade?
         const annotatedIssue = Object.assign({}, result.issues[issueId], {
           upgradePath,
           from: vulnPathNonGraphFormat,
