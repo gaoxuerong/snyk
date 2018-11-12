@@ -156,27 +156,31 @@ function convertTestDepGraphResultToLegacy(res, depGraph: depGraphLib.DepGraph):
         const key = getIssueWithVulnPathStr(issueId, vulnPathNonGraphFormat);
         // TODO(michael-go): this is good for memory usage,
         //   but will break `--json` which expects all the fields.
-        const partialIssue = _.pick(result.issues[issueId],
-          [
-            'id',
-            'type',
-            'title',
-            'packageName',
-            'moduleName', // still used?
-            'semver',
-            'severity',
-            'name',
-            'info',
-          ]);
+        // const partialIssue = _.pick(result.issues[issueId],
+        //   [
+        //     'id',
+        //     'type',
+        //     'title',
+        //     'packageName',
+        //     'moduleName', // still used?
+        //     'semver',
+        //     'severity',
+        //     'name',
+        //     'info',
+        //   ]);
 
-        const annotatedIssue: AnnotatedIssue = (partialIssue as any); // TODO: fix this
+        // TODO: this can cause OOM ...
+        //   need to see how to now allocate to much but still create a full `--json` output
         const upgradePath = upgradePathsMap[key];
-        annotatedIssue.upgradePath = upgradePath;
-        annotatedIssue.from = vulnPathNonGraphFormat;
-        annotatedIssue.isUpgradable = !upgradePath ? false : (!!upgradePath[0] || !!upgradePath[1]);
-        annotatedIssue.isPatchable = depIssues[issueId].fixInfo.isPatchable; // TODO: test this
-        annotatedIssue.name = pkg.name;
-        annotatedIssue.version = pkg.version;
+        const annotatedIssue = Object.assign({}, result.issues[issueId], {
+          upgradePath,
+          from: vulnPathNonGraphFormat,
+          isUpgradable: !upgradePath ? false : (!!upgradePath[0] || !!upgradePath[1]),
+          isPatchable: depIssues[issueId].fixInfo.isPatchable, // TODO: test this
+          name: pkg.name,
+          version: pkg.version,
+        });
+
         legacyRes.vulnerabilities.push(annotatedIssue);
       });
     });
