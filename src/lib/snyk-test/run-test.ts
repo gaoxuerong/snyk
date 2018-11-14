@@ -35,7 +35,7 @@ async function runTest(packageManager: string, root: string , options): Promise<
     let res = await sendPayload(payload, hasDevDependencies);
 
     if (depGraph) {
-      res = convertTestDepGraphResultToLegacy(res, depGraph);
+      res = convertTestDepGraphResultToLegacy(res, depGraph, packageManager);
     }
 
     analytics.add('vulns-pre-policy', res.vulnerabilities.length);
@@ -103,30 +103,24 @@ interface AnnotatedIssue extends VulnInfo {
 }
 
 interface LegacyVulnApiResult {
-  dependencyCount?: number;
+  vulnerabilities: any[]; // TODO: type
+  ok: boolean;
+  dependencyCount: number;
   org: string;
   policy: string;
   isPrivate: boolean;
-  vulnerabilities: any[]; // TODO: type
+  licensesPolicy: object;
+  packageManager: string;
+  ignoreSettings: object;
 }
 
-function convertTestDepGraphResultToLegacy(res, depGraph: depGraphLib.DepGraph): LegacyVulnApiResult {
-  const meta = res.meta || {};
-
-  const legacyRes: LegacyVulnApiResult = {
-    vulnerabilities: [],
-    org: meta.org,
-    policy: meta.policy,
-    isPrivate: !meta.isPublic,
-  };
-
+function convertTestDepGraphResultToLegacy(
+    res, depGraph: depGraphLib.DepGraph, packageManager: string): LegacyVulnApiResult {
   // TODO: remove me
   const nodeFs = require('fs');
   nodeFs.writeFileSync('/tmp/test-graph-result.json', JSON.stringify(res));
 
   const result = res.result;
-
-  legacyRes.dependencyCount = depGraph.getPkgs().length - 1;
 
   // TODO: make sure the way you handle null versions is the same here and in vuln
   const upgradePathsMap = [];
@@ -145,17 +139,15 @@ function convertTestDepGraphResultToLegacy(res, depGraph: depGraphLib.DepGraph):
     });
   });
 
-  legacyRes.vulnerabilities = [];
+  const vulnerabilities: AnnotatedIssue[] = [];
   Object.keys(result.affectedPkgs).forEach((pkgId) => {
     const pkg = result.affectedPkgs[pkgId].pkg;
     const depIssues = result.affectedPkgs[pkgId].issues;
     const vulnPaths = depGraph.pkgPathsToRoot(pkg);
     vulnPaths.forEach((vulnPath) => {
       Object.keys(depIssues).forEach((issueId) => {
-        const vulnPathNonGraphFormat = getVulnPathNonGraphFormat(vulnPath);
-        const key = getIssueWithVulnPathStr(issueId, vulnPathNonGraphFormat);
-        // TODO(michael-go): this is good for memory usage,
-        //   but will break `--json` which expects all the fields.
+        const fromPath = getLegacyFromPath(vulnPath);
+        const key = getIssueWithVulnPathStr(issueId, fromPath);
         // const partialIssue = _.pick(result.issues[issueId],
         //   [
         //     'id',
@@ -170,21 +162,36 @@ function convertTestDepGraphResultToLegacy(res, depGraph: depGraphLib.DepGraph):
         //   ]);
 
         // TODO: this can cause OOM ...
-        //   need to see how to now allocate to much but still create a full `--json` output
-        const upgradePath = upgradePathsMap[key]; // TODO)michael-go): what should it be if no upgrade?
-        const annotatedIssue = Object.assign({}, result.issues[issueId], {
+        //   need to see how to not allocate to much but still create a full `--json` output
+        const upgradePath = upgradePathsMap[key] || [];
+        const annotatedIssue: AnnotatedIssue = Object.assign({}, result.issues[issueId], {
           upgradePath,
-          from: vulnPathNonGraphFormat,
-          isUpgradable: !upgradePath ? false : (!!upgradePath[0] || !!upgradePath[1]),
+          from: fromPath,
+          isUpgradable: !!upgradePath[0] || !!upgradePath[1],
           isPatchable: depIssues[issueId].fixInfo.isPatchable, // TODO: test this
           name: pkg.name,
           version: pkg.version,
         });
 
-        legacyRes.vulnerabilities.push(annotatedIssue);
+        vulnerabilities.push(annotatedIssue);
       });
     });
   });
+
+  const meta = res.meta || {};
+
+  const legacyRes: LegacyVulnApiResult = {
+    vulnerabilities,
+    ok: true,
+    dependencyCount: depGraph.getPkgs().length - 1,
+    org: meta.org,
+    policy: meta.policy,
+    isPrivate: !meta.isPublic,
+    licensesPolicy: meta.licensesPolicy,
+    packageManager, // TODO: seems /vuln API returns `maven` for `gradle` here?
+    ignoreSettings: meta.ignoreSettings,
+    // TODO: also `summary`
+  };
 
   return legacyRes;
 }
@@ -198,7 +205,7 @@ function getIssueWithVulnPathStr(issueId, vulnPath) {
 }
 
 // TODO: rename
-function getVulnPathNonGraphFormat(vulnPath) {
+function getLegacyFromPath(vulnPath) {
   return vulnPath.slice().reverse().map((pkg) => {
     return toPkgId(pkg);
   });
