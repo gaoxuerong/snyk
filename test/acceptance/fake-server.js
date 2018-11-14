@@ -112,6 +112,29 @@ module.exports = function (root, apikey) {
     return next();
   });
 
+  server.post(root + '/test-dep-graph', function (req, res, next) {
+    if (req.query.org && req.query.org === 'missing-org') {
+      res.status(404);
+      res.send({
+        code: 404,
+        userMessage: 'cli error message',
+      });
+      return next();
+    }
+
+    res.send({
+      result: {
+        issues: {},
+        affectedPkgs: {},
+      },
+      meta: {
+        org: 'test-org',
+        isPublic: false,
+      },
+    });
+    return next();
+  });
+
   server.put(root + '/monitor/:registry', function (req, res, next) {
     res.send({
       id: 'test',
