@@ -8,7 +8,6 @@ var os = require('os');
 var _ = require('lodash');
 var isCI = require('./is-ci');
 var analytics = require('./analytics');
-var {DepGraph} = require('@snyk/dep-graph');
 
 function monitor(root, meta, info) {
   var pkg = info.package;
@@ -32,8 +31,6 @@ function monitor(root, meta, info) {
       // YARN temporary fix to avoid BE changes
       packageManager = packageManager === 'yarn' ? 'npm' : packageManager;
 
-      const depGraph = DepGraph.createFromPkgTree(pkg);
-
       return new Promise(function (resolve, reject) {
         request({
           body: {
@@ -56,7 +53,6 @@ function monitor(root, meta, info) {
             },
             policy: policy.toString(),
             package: pkg,
-            depGraph: depGraph.toJSON(), // TODO: hack - shouldn't be part of this PR
             // we take the targetFile from the plugin,
             // because we want to send it only for specific package-managers
             targetFile: pluginMeta.targetFile,
