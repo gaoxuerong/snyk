@@ -5,7 +5,7 @@ module.exports = gemfileLockToDependencies;
 
 const detectCycles = (dep, chain) => {
   if (chain.includes(dep)) {
-    const error = Error('Cyclic dependency detected in lockfile', { dep, chain });
+    const error = Error('Cyclic dependency detected in lockfile', {dep, chain});
     const UNPROCESSABLE_ENTITY = 422;
     error.code = UNPROCESSABLE_ENTITY;
     throw error;
@@ -31,7 +31,7 @@ const gemfileReducer = (lockFile, allDeps, ancestors) => (deps, dep) => {
       deps[dep].dependencies = Object
         .keys(gemspec)
         .filter(k => k !== 'version')
-        .reduce(gemfileReducer(lockFile, allDeps, ancestors.concat([ dep ])), {});
+        .reduce(gemfileReducer(lockFile, allDeps, ancestors.concat([dep])), {});
     }
   }
   return deps;
