@@ -14,6 +14,7 @@ import request = require('../request');
 import snyk = require('../');
 import spinner = require('../spinner');
 import common = require('./common');
+import gemfileLockToDependencies = require('../../lib/plugins/rubygems/gemfile-lock-to-dependencies');
 
 // tslint:disable-next-line:no-var-requires
 const debug = require('debug')('snyk');
@@ -302,9 +303,17 @@ async function assembleLocalPayload(root, options, policyLocations) {
       pkg.docker.baseImage = options['base-image'];
     }
 
+    if (inspectRes.plugin && inspectRes.plugin.name === 'bundled:rubygems') {
+      const gemfileLockBase64 = inspectRes.package.files.gemfileLock.contents;
+      const gemfileLockContents = Buffer.from(gemfileLockBase64, 'base64').toString();
+      console.time('gemfileLockToDependencies');
+      pkg.dependencies = gemfileLockToDependencies(gemfileLockContents);
+      console.timeEnd('gemfileLockToDependencies');
+    }
+
     console.time('depTreeToGraph');
     const depGraph = await depGraphLib.legacy.depTreeToGraph(
-      inspectRes.package, options.packageManager);
+      pkg, options.packageManager);
     console.timeEnd('depTreeToGraph');
     fs.writeFileSync('/tmp/test-dep-graph.json', JSON.stringify(depGraph.toJSON(), null, 2));
 
