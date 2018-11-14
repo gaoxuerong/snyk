@@ -293,12 +293,6 @@ async function assembleLocalPayload(root, options, policyLocations) {
     await spinner(spinnerLbl);
     const inspectRes = await moduleInfo.inspect(root, options.file, options);
 
-    console.time('depTreeToGraph');
-    const depGraph = await depGraphLib.legacy.depTreeToGraph(
-      inspectRes.package, options.packageManager);
-    console.timeEnd('depTreeToGraph');
-    fs.writeFileSync('/tmp/test-dep-graph.json', JSON.stringify(depGraph.toJSON(), null, 2));
-
     const pkg = inspectRes.package;
     if (_.get(inspectRes, 'plugin.packageManager')) {
       options.packageManager = inspectRes.plugin.packageManager;
@@ -307,6 +301,13 @@ async function assembleLocalPayload(root, options, policyLocations) {
       pkg.docker = pkg.docker || {};
       pkg.docker.baseImage = options['base-image'];
     }
+
+    console.time('depTreeToGraph');
+    const depGraph = await depGraphLib.legacy.depTreeToGraph(
+      inspectRes.package, options.packageManager);
+    console.timeEnd('depTreeToGraph');
+    fs.writeFileSync('/tmp/test-dep-graph.json', JSON.stringify(depGraph.toJSON(), null, 2));
+
     analytics.add('policies', policyLocations.length);
     analytics.add('packageManager', options.packageManager);
     analytics.add('packageName', pkg.name);
