@@ -1201,8 +1201,7 @@ function (t) {
   });
 });
 
-test('`test foo:latest --docker` doesnt collect policy from cwd',
-function (t) {
+test('`test foo:latest --docker` doesnt collect policy from cwd', async (t) => {
   chdirWorkspaces('npm-package-policy');
   var plugin = {
     inspect: function () {
@@ -1221,32 +1220,29 @@ function (t) {
     .returns(plugin);
   t.teardown(plugins.loadPlugin.restore);
 
-  return cli.test('foo:latest', {
+  await cli.test('foo:latest', {
     docker: true,
     org: 'explicit-org',
-  })
-  .then(function () {
-    var req = server.popRequest();
-    t.equal(req.method, 'POST', 'makes POST request');
-    t.match(req.url, '/vuln/deb',
-      'posts to correct url (uses package manager from plugin response)');
-    t.same(plugin.inspect.getCall(0).args,
-      ['foo:latest', null, {
-        args: null,
-        file: null,
-        docker: true,
-        org: 'explicit-org',
-        packageManager: null,
-        path: 'foo:latest',
-        showVulnPaths: true,
-      }], 'calls docker plugin with expected arguments');
-    var policyString = req.body.policy;
-    t.false(policyString, 'policy not sent');
   });
+  var req = server.popRequest();
+  t.equal(req.method, 'POST', 'makes POST request');
+  t.match(req.url, '/test-dep-graph', 'posts to correct url');
+  t.equal(req.body.depGraph.pkgManager.name, 'deb');
+  t.same(plugin.inspect.getCall(0).args,
+    ['foo:latest', null, {
+      args: null,
+      file: null,
+      docker: true,
+      org: 'explicit-org',
+      packageManager: null,
+      path: 'foo:latest',
+      showVulnPaths: true,
+    }], 'calls docker plugin with expected arguments');
+  var policyString = req.body.policy;
+  t.false(policyString, 'policy not sent');
 });
 
-test('`test foo:latest --docker` supports custom policy',
-function (t) {
+test('`test foo:latest --docker` supports custom policy', async (t) => {
   chdirWorkspaces();
   var plugin = {
     inspect: function () {
@@ -1265,34 +1261,31 @@ function (t) {
     .returns(plugin);
   t.teardown(plugins.loadPlugin.restore);
 
-  return cli.test('foo:latest', {
+  await cli.test('foo:latest', {
     docker: true,
     org: 'explicit-org',
     'policy-path': 'npm-package-policy/custom-location',
-  })
-  .then(function () {
-    var req = server.popRequest();
-    t.equal(req.method, 'POST', 'makes POST request');
-    t.match(req.url, '/vuln/deb',
-      'posts to correct url (uses package manager from plugin response)');
-    t.same(plugin.inspect.getCall(0).args,
-      ['foo:latest', null, {
-        args: null,
-        file: null,
-        docker: true,
-        org: 'explicit-org',
-        packageManager: null,
-        path: 'foo:latest',
-        showVulnPaths: true,
-        'policy-path': 'npm-package-policy/custom-location',
-      }], 'calls docker plugin with expected arguments');
-
-    var expected = fs.readFileSync(
-      path.join('npm-package-policy/custom-location', '.snyk'),
-      'utf8');
-    var policyString = req.body.policy;
-    t.equal(policyString, expected, 'sends correct policy');
   });
+  var req = server.popRequest();
+  t.match(req.url, '/test-dep-graph', 'posts to correct url');
+  t.equal(req.body.depGraph.pkgManager.name, 'deb');
+  t.same(plugin.inspect.getCall(0).args,
+    ['foo:latest', null, {
+      args: null,
+      file: null,
+      docker: true,
+      org: 'explicit-org',
+      packageManager: null,
+      path: 'foo:latest',
+      showVulnPaths: true,
+      'policy-path': 'npm-package-policy/custom-location',
+    }], 'calls docker plugin with expected arguments');
+
+  var expected = fs.readFileSync(
+    path.join('npm-package-policy/custom-location', '.snyk'),
+    'utf8');
+  var policyString = req.body.policy;
+  t.equal(policyString, expected, 'sends correct policy');
 });
 
 test('`test --policy-path`', function (t) {
