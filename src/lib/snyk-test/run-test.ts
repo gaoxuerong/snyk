@@ -303,8 +303,8 @@ async function assembleLocalPayload(root, options, policyLocations) {
       pkg.docker.baseImage = options['base-image'];
     }
 
-    if (inspectRes.plugin && inspectRes.plugin.name === 'bundled:rubygems') {
-      const gemfileLockBase64 = inspectRes.package.files.gemfileLock.contents;
+    if (_.get(pkg, 'files.gemfileLock.contents')) {
+      const gemfileLockBase64 = pkg.files.gemfileLock.contents;
       const gemfileLockContents = Buffer.from(gemfileLockBase64, 'base64').toString();
       console.time('gemfileLockToDependencies');
       pkg.dependencies = gemfileLockToDependencies(gemfileLockContents);
