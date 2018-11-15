@@ -348,8 +348,7 @@ test('`test ruby-app` auto-detects Gemfile', function (t) {
         depGraph.pkgs.map((p) => p.id).sort(),
         ['ruby-app@', 'json@2.0.2', 'lynx@0.4.0'].sort(),
         'depGraph looks fine');
-      //TODO(michael-go): fix this
-      // t.equal(req.body.targetFile, 'Gemfile', 'specifies target');
+      t.equal(req.body.module.targetFile, 'Gemfile', 'specifies target');
     });
 });
 
@@ -458,9 +457,8 @@ test('`test monorepo --file=sub-ruby-app/Gemfile`', async (t) => {
   t.equal(req.method, 'POST', 'makes POST request');
   t.match(req.url, '/test-dep-graph', 'posts to correct url');
   t.equal(req.body.depGraph.pkgManager.name, 'rubygems');
-  //TODO(michael-go): fix that?
-  // t.equal(req.body.targetFile, path.join('sub-ruby-app', 'Gemfile'),
-  //   'specifies target');
+  t.equal(req.body.module.targetFile, path.join('sub-ruby-app', 'Gemfile'),
+    'specifies target');
 });
 
 test('`test maven-app --file=pom.xml --dev` sends package info', async (t) => {

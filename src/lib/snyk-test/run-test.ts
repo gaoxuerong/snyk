@@ -351,7 +351,8 @@ async function assembleLocalPayload(root, options, policyLocations) {
         module: {
           name: depGraph.rootPkg.name,
           version: depGraph.rootPkg.version,
-          // TODO: target file
+          // TODO(michael-go): we like it this way?
+          targetFile: pkg.targetFile || options.file,
         },
         isDocker: !!options.docker,
         docker: pkg.docker,
