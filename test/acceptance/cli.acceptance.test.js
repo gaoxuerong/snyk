@@ -206,37 +206,35 @@ test('`test ruby-app-no-lockfile --file=Gemfile`', function (t) {
   });
 });
 
-test('`test ruby-app --file=Gemfile.lock` sends Gemfile and Lockfile', (t) => {
+test('`test ruby-app --file=Gemfile.lock` sends Gemfile and Lockfile', async (t) => {
   chdirWorkspaces();
-  return cli.test('ruby-app', {file: 'Gemfile.lock'})
-    .then(function () {
-      var req = server.popRequest();
-      t.equal(req.method, 'POST', 'makes POST request');
-      t.match(req.url, '/test-dep-graph', 'posts to correct url');
+  await cli.test('ruby-app', {file: 'Gemfile.lock'})
 
-      const depGraph = req.body.depGraph;
-      t.equal(depGraph.pkgManager.name, 'rubygems');
-      t.same(
-        depGraph.pkgs.map((p) => p.id).sort(),
-        ['ruby-app@', 'json@2.0.2', 'lynx@0.4.0'].sort(),
-        'depGraph looks fine');
-    });
+  var req = server.popRequest();
+  t.equal(req.method, 'POST', 'makes POST request');
+  t.match(req.url, '/test-dep-graph', 'posts to correct url');
+
+  const depGraph = req.body.depGraph;
+  t.equal(depGraph.pkgManager.name, 'rubygems');
+  t.same(
+    depGraph.pkgs.map((p) => p.id).sort(),
+    ['ruby-app@', 'json@2.0.2', 'lynx@0.4.0'].sort(),
+    'depGraph looks fine');
 });
 
-test('`test ruby-app` returns correct meta', (t) => {
+test('`test ruby-app` returns correct meta',  async (t) => {
   chdirWorkspaces();
-  return cli.test('ruby-app')
-    .then(function (res) {
-      var meta = res.slice(res.indexOf('Organisation:')).split('\n');
-      t.match(meta[0], /Organisation:\s+test-org/, 'organisation displayed');
-      t.match(meta[1], /Package manager:\s+rubygems/,
-        'package manager displayed');
-      t.match(meta[2], /Target file:\s+Gemfile/, 'target file displayed');
-      t.match(meta[3], /Open source:\s+no/, 'open source displayed');
-      t.match(meta[4], /Project path:\s+ruby-app/, 'path displayed');
-      t.notMatch(meta[5], /Local Snyk policy:\s+found/,
-        'local policy not displayed');
-    });
+  const res = await cli.test('ruby-app');
+
+  var meta = res.slice(res.indexOf('Organisation:')).split('\n');
+  t.match(meta[0], /Organisation:\s+test-org/, 'organisation displayed');
+  t.match(meta[1], /Package manager:\s+rubygems/,
+    'package manager displayed');
+  t.match(meta[2], /Target file:\s+Gemfile/, 'target file displayed');
+  t.match(meta[3], /Open source:\s+no/, 'open source displayed');
+  t.match(meta[4], /Project path:\s+ruby-app/, 'path displayed');
+  t.notMatch(meta[5], /Local Snyk policy:\s+found/,
+    'local policy not displayed');
 });
 
 test('`test gradle-app` returns correct meta', function (t) {
@@ -321,21 +319,20 @@ test('`test ruby-gem-no-lockfile --file=ruby-gem.gemspec`', async (t) => {
     'depGraph looks fine');
 });
 
-test('`test ruby-gem --file=ruby-gem.gemspec`', (t) => {
+test('`test ruby-gem --file=ruby-gem.gemspec`', async (t) => {
   chdirWorkspaces();
-  return cli.test('ruby-gem', {file: 'ruby-gem.gemspec'})
-    .then(function () {
-      var req = server.popRequest();
-      t.equal(req.method, 'POST', 'makes POST request');
-      t.match(req.url, '/test-dep-graph', 'posts to correct url');
+  await cli.test('ruby-gem', {file: 'ruby-gem.gemspec'});
 
-      const depGraph = req.body.depGraph;
-      t.equal(depGraph.pkgManager.name, 'rubygems');
-      t.same(
-        depGraph.pkgs.map((p) => p.id).sort(),
-        ['ruby-gem@', 'ruby-gem@0.1.0', 'rake@10.5.0'].sort(),
-        'depGraph looks fine');
-    });
+  var req = server.popRequest();
+  t.equal(req.method, 'POST', 'makes POST request');
+  t.match(req.url, '/test-dep-graph', 'posts to correct url');
+
+  const depGraph = req.body.depGraph;
+  t.equal(depGraph.pkgManager.name, 'rubygems');
+  t.same(
+    depGraph.pkgs.map((p) => p.id).sort(),
+    ['ruby-gem@', 'ruby-gem@0.1.0', 'rake@10.5.0'].sort(),
+    'depGraph looks fine');
 });
 
 test('`test ruby-app` auto-detects Gemfile', function (t) {
@@ -357,7 +354,7 @@ test('`test ruby-app` auto-detects Gemfile', function (t) {
     });
 });
 
-test('`test nuget-app-2 auto-detects project.assets.json`', (t) => {
+test('`test nuget-app-2 auto-detects project.assets.json`', async (t) => {
   chdirWorkspaces();
   var plugin = {
     inspect: function () {
@@ -372,25 +369,24 @@ test('`test nuget-app-2 auto-detects project.assets.json`', (t) => {
     .withArgs('nuget')
     .returns(plugin);
 
-  return cli.test('nuget-app-2')
-    .then(function () {
-      var req = server.popRequest();
-      t.equal(req.method, 'POST', 'makes POST request');
-      t.match(req.url, '/test-dep-graph', 'posts to correct url');
-      t.equal(req.body.depGraph.pkgManager.name, 'nuget');
-      t.same(plugin.inspect.getCall(0).args,
-        ['nuget-app-2', 'project.assets.json', {
-          args: null,
-          file: 'project.assets.json',
-          org: null,
-          packageManager: 'nuget',
-          path: 'nuget-app-2',
-          showVulnPaths: true,
-        }], 'calls nuget plugin');
-    });
+  await cli.test('nuget-app-2');
+
+  var req = server.popRequest();
+  t.equal(req.method, 'POST', 'makes POST request');
+  t.match(req.url, '/test-dep-graph', 'posts to correct url');
+  t.equal(req.body.depGraph.pkgManager.name, 'nuget');
+  t.same(plugin.inspect.getCall(0).args,
+    ['nuget-app-2', 'project.assets.json', {
+      args: null,
+      file: 'project.assets.json',
+      org: null,
+      packageManager: 'nuget',
+      path: 'nuget-app-2',
+      showVulnPaths: true,
+    }], 'calls nuget plugin');
 });
 
-test('`test nuget-app-2.1 auto-detects obj/project.assets.json`', (t) => {
+test('`test nuget-app-2.1 auto-detects obj/project.assets.json`', async (t) => {
   chdirWorkspaces();
   var plugin = {
     inspect: function () {
@@ -405,25 +401,24 @@ test('`test nuget-app-2.1 auto-detects obj/project.assets.json`', (t) => {
     .withArgs('nuget')
     .returns(plugin);
 
-  return cli.test('nuget-app-2.1')
-    .then(function () {
-      var req = server.popRequest();
-      t.equal(req.method, 'POST', 'makes POST request');
-      t.match(req.url, '/test-dep-graph', 'posts to correct url');
-      t.equal(req.body.depGraph.pkgManager.name, 'nuget');
-      t.same(plugin.inspect.getCall(0).args,
-        ['nuget-app-2.1', 'obj/project.assets.json', {
-          args: null,
-          file: 'obj/project.assets.json',
-          org: null,
-          packageManager: 'nuget',
-          path: 'nuget-app-2.1',
-          showVulnPaths: true,
-        }], 'calls nuget plugin');
-    });
+  await cli.test('nuget-app-2.1');
+
+  var req = server.popRequest();
+  t.equal(req.method, 'POST', 'makes POST request');
+  t.match(req.url, '/test-dep-graph', 'posts to correct url');
+  t.equal(req.body.depGraph.pkgManager.name, 'nuget');
+  t.same(plugin.inspect.getCall(0).args,
+    ['nuget-app-2.1', 'obj/project.assets.json', {
+      args: null,
+      file: 'obj/project.assets.json',
+      org: null,
+      packageManager: 'nuget',
+      path: 'nuget-app-2.1',
+      showVulnPaths: true,
+    }], 'calls nuget plugin');
 });
 
-test('`test nuget-app-4 auto-detects packages.config`', (t) => {
+test('`test nuget-app-4 auto-detects packages.config`', async (t) => {
   chdirWorkspaces();
   var plugin = {
     inspect: function () {
@@ -438,58 +433,54 @@ test('`test nuget-app-4 auto-detects packages.config`', (t) => {
     .withArgs('nuget')
     .returns(plugin);
 
-  return cli.test('nuget-app-4')
-    .then(function () {
-      var req = server.popRequest();
-      t.equal(req.method, 'POST', 'makes POST request');
-      t.match(req.url, '/test-dep-graph', 'posts to correct url');
-      t.equal(req.body.depGraph.pkgManager.name, 'nuget');
-      t.same(plugin.inspect.getCall(0).args,
-        ['nuget-app-4', 'packages.config', {
-          args: null,
-          file: 'packages.config',
-          org: null,
-          packageManager: 'nuget',
-          path: 'nuget-app-4',
-          showVulnPaths: true,
-        }], 'calls nuget plugin');
-    });
+  await cli.test('nuget-app-4');
+
+  var req = server.popRequest();
+  t.equal(req.method, 'POST', 'makes POST request');
+  t.match(req.url, '/test-dep-graph', 'posts to correct url');
+  t.equal(req.body.depGraph.pkgManager.name, 'nuget');
+  t.same(plugin.inspect.getCall(0).args,
+    ['nuget-app-4', 'packages.config', {
+      args: null,
+      file: 'packages.config',
+      org: null,
+      packageManager: 'nuget',
+      path: 'nuget-app-4',
+      showVulnPaths: true,
+    }], 'calls nuget plugin');
 });
 
-test('`test monorepo --file=sub-ruby-app/Gemfile`', (t) => {
+test('`test monorepo --file=sub-ruby-app/Gemfile`', async (t) => {
   chdirWorkspaces();
-  return cli.test('monorepo', {file: 'sub-ruby-app/Gemfile'})
-    .then(function () {
-      var req = server.popRequest();
-      var files = req.body.files;
-      t.equal(req.method, 'POST', 'makes POST request');
-      t.match(req.url, '/test-dep-graph', 'posts to correct url');
-      t.equal(req.body.depGraph.pkgManager.name, 'rubygems');
-      //TODO(michael-go): fix that
-      // t.equal(req.body.targetFile, path.join('sub-ruby-app', 'Gemfile'),
-      //   'specifies target');
-    });
+  await cli.test('monorepo', {file: 'sub-ruby-app/Gemfile'});
+
+  var req = server.popRequest();
+  var files = req.body.files;
+  t.equal(req.method, 'POST', 'makes POST request');
+  t.match(req.url, '/test-dep-graph', 'posts to correct url');
+  t.equal(req.body.depGraph.pkgManager.name, 'rubygems');
+  //TODO(michael-go): fix that?
+  // t.equal(req.body.targetFile, path.join('sub-ruby-app', 'Gemfile'),
+  //   'specifies target');
 });
 
-test('`test maven-app --file=pom.xml --dev` sends package info', (t) => {
+test('`test maven-app --file=pom.xml --dev` sends package info', async (t) => {
   chdirWorkspaces();
   stubExec(t, 'maven-app/mvn-dep-tree-stdout.txt');
-  return cli.test('maven-app',
-    {file: 'pom.xml', org: 'nobelprize.org', dev: true})
-    .then(function () {
-      const req = server.popRequest();
-      t.equal(req.method, 'POST', 'makes POST request');
-      t.match(req.url, '/test-dep-graph', 'posts to correct url');
-      t.equal(req.query.org, 'nobelprize.org', 'org sent as a query in request');
+  await cli.test('maven-app', {file: 'pom.xml', org: 'nobelprize.org', dev: true});
 
-      t.equal(req.body.module.name, 'com.mycompany.app:maven-app',
-        'specifies name');
-      const depGraph = req.body.depGraph;
-      const pkgs = depGraph.pkgs.map((x) => x.id);
-      t.ok(pkgs.includes('com.mycompany.app:maven-app@1.0-SNAPSHOT'));
-      t.ok(pkgs.includes('axis:axis@1.4'));
-      t.ok(pkgs.includes('junit:junit@3.8.2'));
-    });
+  const req = server.popRequest();
+  t.equal(req.method, 'POST', 'makes POST request');
+  t.match(req.url, '/test-dep-graph', 'posts to correct url');
+  t.equal(req.query.org, 'nobelprize.org', 'org sent as a query in request');
+
+  t.equal(req.body.module.name, 'com.mycompany.app:maven-app',
+    'specifies name');
+  const depGraph = req.body.depGraph;
+  const pkgs = depGraph.pkgs.map((x) => x.id);
+  t.ok(pkgs.includes('com.mycompany.app:maven-app@1.0-SNAPSHOT'));
+  t.ok(pkgs.includes('axis:axis@1.4'));
+  t.ok(pkgs.includes('junit:junit@3.8.2'));
 });
 
 test('`test npm-package` sends pkg info', function (t) {
