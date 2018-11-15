@@ -313,10 +313,9 @@ test('`test ruby-gem-no-lockfile --file=ruby-gem.gemspec`', async (t) => {
 
   const depGraph = req.body.depGraph;
   t.equal(depGraph.pkgManager.name, 'rubygems');
-  // TODO(michael-go): is this correct we detect no deps?
   t.same(depGraph.pkgs.map((p) => p.id),
     ['ruby-gem-no-lockfile@'],
-    'depGraph looks fine');
+    'no deps as we dont really support gemspecs yet');
 });
 
 test('`test ruby-gem --file=ruby-gem.gemspec`', async (t) => {
