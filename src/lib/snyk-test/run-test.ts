@@ -75,6 +75,7 @@ interface Payload {
   body?: {
     depGraph: depGraphLib.DepGraph,
     policy: string;
+    module: object; // TODO: rename to target?
   };
   qs?: object | null;
 }
@@ -348,7 +349,7 @@ async function assembleLocalPayload(root, options, policyLocations) {
       body: {
         depGraph,
         policy: policy && policy.toString(),
-        module: {
+        module: { // TODO: rename to .target ?
           name: depGraph.rootPkg.name,
           version: depGraph.rootPkg.version,
           // TODO(michael-go): we like it this way?
