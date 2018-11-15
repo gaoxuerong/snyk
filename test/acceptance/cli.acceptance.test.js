@@ -1106,15 +1106,29 @@ test('`test foo:latest --docker`', async (t) => {
     }], 'calls docker plugin with expected arguments');
 });
 
-test('`test foo:latest --docker vulnerable paths`',
-function (t) {
-  var plugin = {
+test('`test foo:latest --docker vulnerable paths`', async (t) => {
+  const plugin = {
     inspect: function () {
       return Promise.resolve({
         plugin: {
           packageManager: 'deb',
         },
-        package: {},
+        package: {
+          name: 'docker-image',
+          dependencies: {
+            'apt/libapt-pkg5.0': {
+              version: '1.6.3ubuntu0.1',
+              dependencies: {
+                'bzip2/libbz2-1.0': {
+                  version: '1.0.6-8.1',
+                },
+              },
+            },
+            'bzip2/libbz2-1.0': {
+              version: '1.0.6-8.1',
+            },
+          },
+        },
       });
     },
   };
@@ -1125,19 +1139,23 @@ function (t) {
     .returns(plugin);
   t.teardown(plugins.loadPlugin.restore);
 
-  // TODO(michael-go): update the vulns.json, otherwise the test tests nothing
-  var vulns = require('./fixtures/docker/vulns.json');
+  const vulns = require('./fixtures/docker/find-result.json');
   server.setNextResponse(vulns);
 
-  return cli.test('foo:latest', {
-    docker: true,
-    org: 'explicit-org',
-  })
-  .catch(function (res) {
-    var req = server.popRequest();
-    t.false(res.message.includes('vulnerable paths'),
-     'docker should not includes number of vulnerable paths');
-  });
+  try {
+    await cli.test('foo:latest', {
+      docker: true,
+      org: 'explicit-org',
+    });
+    t.fail('should have found vuln');
+  } catch (err) {
+    const msg = err.message;
+    t.match(msg, 'Tested 2 dependencies for known vulnerabilities, found 1 vulnerability');
+    t.match(msg, 'From: bzip2/libbz2-1.0@1.0.6-8.1');
+    t.match(msg, 'From: apt/libapt-pkg5.0@1.6.3ubuntu0.1 > bzip2/libbz2-1.0@1.0.6-8.1');
+    t.false(msg.includes('vulnerable paths'),
+      'docker should not includes number of vulnerable paths');
+  }
 });
 
 test('`test foo:latest --docker --file=Dockerfile`', async (t) => {
