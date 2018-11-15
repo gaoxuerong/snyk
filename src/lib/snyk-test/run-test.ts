@@ -354,6 +354,7 @@ async function assembleLocalPayload(root, options, policyLocations) {
           // TODO: target file
         },
         isDocker: !!options.docker,
+        docker: pkg.docker,
       },
     };
 
