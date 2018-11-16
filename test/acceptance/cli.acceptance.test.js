@@ -476,9 +476,9 @@ test('`test maven-app --file=pom.xml --dev` sends package info', async (t) => {
   //   'specifies name');
   const depGraph = req.body.depGraph;
   const pkgs = depGraph.pkgs.map((x) => x.id);
-  t.ok(pkgs.includes('com.mycompany.app:maven-app@1.0-SNAPSHOT'));
-  t.ok(pkgs.includes('axis:axis@1.4'));
-  t.ok(pkgs.includes('junit:junit@3.8.2'));
+  t.ok(pkgs.indexOf('com.mycompany.app:maven-app@1.0-SNAPSHOT') >= 0);
+  t.ok(pkgs.indexOf('axis:axis@1.4') >= 0);
+  t.ok(pkgs.indexOf('junit:junit@3.8.2') >= 0);
 });
 
 test('`test npm-package` sends pkg info', function (t) {
