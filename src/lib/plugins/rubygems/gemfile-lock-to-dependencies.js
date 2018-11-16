@@ -4,7 +4,7 @@ const gemfile = require('@snyk/gemfile');
 module.exports = gemfileLockToDependencies;
 
 const detectCycles = (dep, chain) => {
-  if (chain.includes(dep)) {
+  if (chain.indexOf(dep) >= 0) {
     const error = Error('Cyclic dependency detected in lockfile', {dep, chain});
     const UNPROCESSABLE_ENTITY = 422;
     error.code = UNPROCESSABLE_ENTITY;
