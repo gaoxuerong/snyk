@@ -348,7 +348,7 @@ test('`test ruby-app` auto-detects Gemfile', function (t) {
         depGraph.pkgs.map((p) => p.id).sort(),
         ['ruby-app@', 'json@2.0.2', 'lynx@0.4.0'].sort(),
         'depGraph looks fine');
-      t.equal(req.body.module.targetFile, 'Gemfile', 'specifies target');
+      t.equal(req.body.targetFile, 'Gemfile', 'specifies target');
     });
 });
 
@@ -453,11 +453,10 @@ test('`test monorepo --file=sub-ruby-app/Gemfile`', async (t) => {
   await cli.test('monorepo', {file: 'sub-ruby-app/Gemfile'});
 
   var req = server.popRequest();
-  var files = req.body.files;
   t.equal(req.method, 'POST', 'makes POST request');
   t.match(req.url, '/test-dep-graph', 'posts to correct url');
   t.equal(req.body.depGraph.pkgManager.name, 'rubygems');
-  t.equal(req.body.module.targetFile, path.join('sub-ruby-app', 'Gemfile'),
+  t.equal(req.body.targetFile, path.join('sub-ruby-app', 'Gemfile'),
     'specifies target');
 });
 
@@ -471,8 +470,10 @@ test('`test maven-app --file=pom.xml --dev` sends package info', async (t) => {
   t.match(req.url, '/test-dep-graph', 'posts to correct url');
   t.equal(req.query.org, 'nobelprize.org', 'org sent as a query in request');
 
-  t.equal(req.body.module.name, 'com.mycompany.app:maven-app',
-    'specifies name');
+  // TODO(shaun): find another way to test this..
+  // .. aside from digging into DepGraphData to find the root package
+  // t.equal(req.body.module.name, 'com.mycompany.app:maven-app',
+  //   'specifies name');
   const depGraph = req.body.depGraph;
   const pkgs = depGraph.pkgs.map((x) => x.id);
   t.ok(pkgs.includes('com.mycompany.app:maven-app@1.0-SNAPSHOT'));
