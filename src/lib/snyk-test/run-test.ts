@@ -75,7 +75,10 @@ interface Payload {
   body?: {
     depGraph: depGraphLib.DepGraph,
     policy: string;
-    module: object; // TODO: rename to target?
+    targetFile?: string;
+    projectNameOverride?: string;
+    isDocker?: boolean;
+    docker?: any;
   };
   qs?: object | null;
 }
@@ -283,7 +286,7 @@ function assemblePayload(root: string, options, policyLocations: string[]): Prom
   return assembleRemotePayload(root, options);
 }
 
-async function assembleLocalPayload(root, options, policyLocations) {
+async function assembleLocalPayload(root, options, policyLocations): Promise<Payload> {
   options.file = options.file || detect.detectPackageFile(root);
   const plugin = plugins.loadPlugin(options.packageManager, options);
   const moduleInfo = ModuleInfo(plugin, options.policy);
@@ -337,7 +340,7 @@ async function assembleLocalPayload(root, options, policyLocations) {
       }
     }
 
-    const payload = {
+    const payload: Payload = {
       method: 'POST',
       url: config.API + '/test-dep-graph',
       json: true,
@@ -349,14 +352,10 @@ async function assembleLocalPayload(root, options, policyLocations) {
       body: {
         depGraph,
         policy: policy && policy.toString(),
-        module: { // TODO: rename to .target ?
-          name: depGraph.rootPkg.name,
-          version: depGraph.rootPkg.version,
-          // TODO(michael-go): we like it this way?
-          targetFile: pkg.targetFile || options.file,
-        },
         isDocker: !!options.docker,
         docker: pkg.docker,
+        projectNameOverride: options.projectName,
+        targetFile: pkg.targetFile || options.file,
       },
     };
 
@@ -366,7 +365,7 @@ async function assembleLocalPayload(root, options, policyLocations) {
   }
 }
 
-async function assembleRemotePayload(root, options) {
+async function assembleRemotePayload(root, options): Promise<Payload> {
   const pkg = moduleToObject(root);
   const encodedName = encodeURIComponent(pkg.name + '@' + pkg.version);
   debug('testing remote: %s', pkg.name + '@' + pkg.version);
