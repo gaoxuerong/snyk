@@ -4,6 +4,8 @@ var {test} = tap;
 var path = require('path');
 var fs = require('fs');
 var sinon = require('sinon');
+var depGraphLib = require('@snyk/dep-graph');
+
 var apiKey = '123456789';
 var oldkey;
 var oldendpoint;
@@ -470,12 +472,9 @@ test('`test maven-app --file=pom.xml --dev` sends package info', async (t) => {
   t.match(req.url, '/test-dep-graph', 'posts to correct url');
   t.equal(req.query.org, 'nobelprize.org', 'org sent as a query in request');
 
-  // TODO(shaun): find another way to test this..
-  // .. aside from digging into DepGraphData to find the root package
-  // t.equal(req.body.module.name, 'com.mycompany.app:maven-app',
-  //   'specifies name');
-  const depGraph = req.body.depGraph;
-  const pkgs = depGraph.pkgs.map((x) => x.id);
+  const depGraph = depGraphLib.createFromJSON(req.body.depGraph);
+  t.equal(depGraph.rootPkg.name, 'com.mycompany.app:maven-app', 'root name');
+  const pkgs = depGraph.getPkgs().map((x) => `${x.name}@${x.version}`);
   t.ok(pkgs.indexOf('com.mycompany.app:maven-app@1.0-SNAPSHOT') >= 0);
   t.ok(pkgs.indexOf('axis:axis@1.4') >= 0);
   t.ok(pkgs.indexOf('junit:junit@3.8.2') >= 0);
