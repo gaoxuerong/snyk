@@ -5,6 +5,7 @@ var path = require('path');
 var fs = require('fs');
 var sinon = require('sinon');
 var depGraphLib = require('@snyk/dep-graph');
+var _ = require('lodash');
 
 var apiKey = '123456789';
 var oldkey;
@@ -1397,6 +1398,27 @@ test('`test npm-package-with-git-url ` handles git url with patch policy', funct
         'found policy file');
     });
 });
+
+test('`test sbt-simple-struts`', async (t) => {
+  chdirWorkspaces();
+
+  // TODO(michael-go): this doesn't really stub what's needed ...
+  // stubExec(t, 'sbt-simple-struts/sbt-dep-tree-stdout.txt');
+  server.setNextResponse(
+    require('./workspaces/sbt-simple-struts/test-graph-result.json'));
+  const out = await cli.test('sbt-simple-struts', {json: true});
+
+  const res = JSON.parse(out);
+
+  const expected =
+    require('./workspaces/sbt-simple-struts/legacy-res-json.json');
+
+  t.same(
+    _.omit(res, ['vulnerabilities']),
+    _.omit(expected, ['vulnerabilities']),
+    'metadata is ok');
+});
+
 
 /**
  * `monitor`
