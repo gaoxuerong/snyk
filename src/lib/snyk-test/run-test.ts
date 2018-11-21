@@ -187,7 +187,7 @@ function convertTestDepGraphResultToLegacy(
 
   const legacyRes: LegacyVulnApiResult = {
     vulnerabilities,
-    ok: true,
+    ok: vulnerabilities.length === 0,
     dependencyCount: depGraph.getPkgs().length - 1,
     org: meta.org,
     policy: meta.policy,

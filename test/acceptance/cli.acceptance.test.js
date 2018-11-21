@@ -1399,24 +1399,30 @@ test('`test npm-package-with-git-url ` handles git url with patch policy', funct
     });
 });
 
-test('`test sbt-simple-struts`', async (t) => {
+only('`test sbt-simple-struts`', async (t) => {
   chdirWorkspaces();
 
   // TODO(michael-go): this doesn't really stub what's needed ...
   // stubExec(t, 'sbt-simple-struts/sbt-dep-tree-stdout.txt');
   server.setNextResponse(
     require('./workspaces/sbt-simple-struts/test-graph-result.json'));
-  const out = await cli.test('sbt-simple-struts', {json: true});
 
-  const res = JSON.parse(out);
+  try {
+    await cli.test('sbt-simple-struts', {json: true});
 
-  const expected =
-    require('./workspaces/sbt-simple-struts/legacy-res-json.json');
+    t.fail('should have thrown');
 
-  t.same(
-    _.omit(res, ['vulnerabilities']),
-    _.omit(expected, ['vulnerabilities']),
-    'metadata is ok');
+  } catch (err) {
+    const res = JSON.parse(err.message);
+
+    const expected =
+      require('./workspaces/sbt-simple-struts/legacy-res-json.json');
+
+    t.same(
+      _.omit(res, ['vulnerabilities']),
+      _.omit(expected, ['vulnerabilities']),
+      'metadata is ok');
+  }
 });
 
 
