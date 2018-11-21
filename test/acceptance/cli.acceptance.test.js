@@ -210,9 +210,9 @@ test('`test ruby-app-no-lockfile --file=Gemfile`', function (t) {
   });
 });
 
-test('`test ruby-app --file=Gemfile.lock` sends Gemfile and Lockfile', async (t) => {
+test('`test ruby-app --file=Gemfile.lock`', async (t) => {
   chdirWorkspaces();
-  await cli.test('ruby-app', {file: 'Gemfile.lock'})
+  await cli.test('ruby-app', {file: 'Gemfile.lock'});
 
   var req = server.popRequest();
   t.equal(req.method, 'POST', 'makes POST request');
@@ -270,6 +270,9 @@ test('`test gradle-app` returns correct meta', function (t) {
 test('`test` returns correct meta for a vulnerable result', function (t) {
   chdirWorkspaces();
   return cli.test('ruby-app', { org: 'org-with-vulns' })
+  .then(() => {
+    t.fail('should have rejected!');
+  })
   .catch(function (res) {
     var meta = res.message.slice(res.message.indexOf('Organisation:'))
       .split('\n');
