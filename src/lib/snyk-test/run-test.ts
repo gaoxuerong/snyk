@@ -117,6 +117,7 @@ interface LegacyVulnApiResult {
   licensesPolicy: object;
   packageManager: string;
   ignoreSettings: object;
+  summary: string;
 }
 
 function convertTestDepGraphResultToLegacy(
@@ -195,6 +196,7 @@ function convertTestDepGraphResultToLegacy(
     licensesPolicy: meta.licensesPolicy,
     packageManager, // TODO: seems /vuln API returns `maven` for `gradle` here?
     ignoreSettings: meta.ignoreSettings,
+    summary: getSummary(vulnerabilities),
     // TODO: also `summary`
   };
 
@@ -230,6 +232,49 @@ function toLegacyUpgradePath(upgradePath) {
 
 function toPkgId(pkg) {
   return `${pkg.name}@${pkg.version || null}`; // TODO: null or '' ?
+}
+
+function getSummary(vulns) {
+  const count = vulns.length;
+  const countText = count;
+  // TODO(michael-go): handle severityThreshold
+  // const severityFilters = [];
+  // const newString = res.policy === 'only_new' ? 'new ' : '';
+  // if (res.severityThreshold) {
+  //   SEVERITIES.slice(SEVERITIES.indexOf(res.severityThreshold)).forEach((sev) => {
+  //     severityFilters.push(sev);
+  //   });
+  // }
+
+  if (!count) {
+    // TODO(michael-go): handle severityThreshold
+    // if (severityFilters.length) {
+    //   return `No ${newString}${severityFilters.join(' or ')} severity vulnerabilities`;
+    // }
+    return 'No known vulnerabilities';
+  }
+
+  // TODO(michael-go): handle severityThreshold
+  // if (severityFilters.length) {
+  //   countText += ' ' + severityFilters.join(' or ') + ' severity';
+  // }
+
+  return `${countText} vulnerable dependency ${pl('path', count)}`;
+}
+
+function pl(word, count) {
+  const ext = {
+    y: 'ies',
+    default: 's',
+  };
+
+  const last = word.split('').pop();
+
+  if (count > 1) {
+    return word.slice(0, -1) + (ext[last] || last + ext.default);
+  }
+
+  return word;
 }
 
 function sendPayload(payload, hasDevDependencies): Promise<any> {
