@@ -241,21 +241,21 @@ test('`test ruby-app` meta when no vulns',  async (t) => {
     'local policy not displayed');
 });
 
-test('`test ruby-app`',  async (t) => {
+test('`test ruby-app-thresholds`', async (t) => {
   chdirWorkspaces();
 
   server.setNextResponse(
-    require('./workspaces/ruby-app/test-graph-result.json'));
+    require('./workspaces/ruby-app-thresholds/test-graph-result.json'));
 
   try {
-    await cli.test('ruby-app');
+    await cli.test('ruby-app-thresholds');
     t.fail('should have thrown');
   } catch (err) {
     const res = err.message;
 
     t.match(res,
-      'Tested 2 dependencies for known vulnerabilities, found 2 vulnerabilities, 2 vulnerable paths',
-      '2 vulns');
+      'Tested 7 dependencies for known vulnerabilities, found 6 vulnerabilities, 7 vulnerable paths',
+      '6 vulns');
 
     var meta = res.slice(res.indexOf('Organisation:')).split('\n');
     t.match(meta[0], /Organisation:\s+test-org/, 'organisation displayed');
@@ -263,20 +263,20 @@ test('`test ruby-app`',  async (t) => {
       'package manager displayed');
     t.match(meta[2], /Target file:\s+Gemfile/, 'target file displayed');
     t.match(meta[3], /Open source:\s+no/, 'open source displayed');
-    t.match(meta[4], /Project path:\s+ruby-app/, 'path displayed');
+    t.match(meta[4], /Project path:\s+ruby-app-thresholds/, 'path displayed');
     t.notMatch(meta[5], /Local Snyk policy:\s+found/,
       'local policy not displayed');
   }
 });
 
-test('`test ruby-app --severity-threshold=medium`',  async (t) => {
+test('`test ruby-app-thresholds --severity-threshold=medium`', async (t) => {
   chdirWorkspaces();
 
   server.setNextResponse(
-    require('./workspaces/ruby-app/test-graph-result.json'));
+    require('./workspaces/ruby-app-thresholds/test-graph-result.json'));
 
   try {
-    await cli.test('ruby-app', {
+    await cli.test('ruby-app-thresholds', {
       severityThreshold: 'medium',
     });
     t.fail('should have thrown');
@@ -284,19 +284,19 @@ test('`test ruby-app --severity-threshold=medium`',  async (t) => {
     const res = err.message;
 
     t.match(res,
-      'Tested 2 dependencies for known vulnerabilities, found 2 vulnerabilities, 2 vulnerable paths',
-      '2 vulns');
+      'Tested 7 dependencies for known vulnerabilities, found 5 vulnerabilities, 6 vulnerable paths',
+      '5 vulns');
   }
 });
 
-test('`test ruby-app --severity-threshold=high',  async (t) => {
+test('`test ruby-app-thresholds --severity-threshold=high', async (t) => {
   chdirWorkspaces();
 
   server.setNextResponse(
-    require('./workspaces/ruby-app/test-graph-result.json'));
+    require('./workspaces/ruby-app-thresholds/test-graph-result.json'));
 
   try {
-    await cli.test('ruby-app', {
+    await cli.test('ruby-app-thresholds', {
       severityThreshold: 'high',
     });
     t.fail('should have thrown');
@@ -304,8 +304,8 @@ test('`test ruby-app --severity-threshold=high',  async (t) => {
     const res = err.message;
 
     t.match(res,
-      'Tested 2 dependencies for known vulnerabilities, found 1 vulnerability, 1 vulnerable path',
-      '1 vulns');
+      'Tested 7 dependencies for known vulnerabilities, found 3 vulnerabilities, 4 vulnerable paths',
+      '3 vulns');
   }
 });
 
