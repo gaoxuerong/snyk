@@ -1,5 +1,6 @@
 var tap = require('tap');
-var {test} = tap;
+var {test, only} = tap;
+tap.runOnly = false; // <- for debug. set to true, and replace a test to only(..)
 
 var path = require('path');
 var fs = require('fs');
@@ -24,8 +25,8 @@ var needle = require('needle');
 var cli = require('../../src/cli/commands');
 var snykPolicy = require('snyk-policy');
 
-var before = test;
-var after = test;
+var before = tap.runOnly ? only : test;
+var after = tap.runOnly ? only : test;
 
 // @later: remove this config stuff.
 // Was copied straight from ../src/cli-server.js
@@ -1399,7 +1400,7 @@ test('`test npm-package-with-git-url ` handles git url with patch policy', funct
     });
 });
 
-only('`test sbt-simple-struts`', async (t) => {
+test('`test sbt-simple-struts`', async (t) => {
   chdirWorkspaces();
 
   // TODO(michael-go): this doesn't really stub what's needed ...
