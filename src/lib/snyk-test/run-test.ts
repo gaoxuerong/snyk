@@ -37,7 +37,9 @@ async function runTest(packageManager: string, root: string , options): Promise<
     let res = await sendPayload(payload, hasDevDependencies);
 
     if (depGraph) {
-      fs.writeFileSync('/tmp/test-dep-graph-res.json', JSON.stringify(res, null, 2));
+      // TODO: remove me
+      fs.writeFileSync('/tmp/test-graph-result.json', JSON.stringify(res, null, 2));
+
       res = convertTestDepGraphResultToLegacy(res, depGraph, packageManager, options.severityThreshold);
     }
 

@@ -45,9 +45,6 @@ interface LegacyVulnApiResult {
 
 function convertTestDepGraphResultToLegacy(
     res, depGraph: depGraphLib.DepGraph, packageManager: string, severityThreshold: string): LegacyVulnApiResult {
-  // TODO: remove me
-  const nodeFs = require('fs');
-  nodeFs.writeFileSync('/tmp/test-graph-result.json', JSON.stringify(res));
 
   const result = res.result;
 
