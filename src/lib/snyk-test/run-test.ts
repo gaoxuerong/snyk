@@ -37,7 +37,7 @@ async function runTest(packageManager: string, root: string , options): Promise<
     let res = await sendPayload(payload, hasDevDependencies);
 
     if (depGraph) {
-      res = convertTestDepGraphResultToLegacy(res, depGraph, packageManager);
+      res = convertTestDepGraphResultToLegacy(res, depGraph, packageManager, options.severityThreshold);
     }
 
     analytics.add('vulns-pre-policy', res.vulnerabilities.length);

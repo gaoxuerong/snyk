@@ -226,7 +226,7 @@ test('`test ruby-app --file=Gemfile.lock`', async (t) => {
     'depGraph looks fine');
 });
 
-test('`test ruby-app` returns correct meta',  async (t) => {
+test('`test ruby-app` meta when no vulns',  async (t) => {
   chdirWorkspaces();
   const res = await cli.test('ruby-app');
 
@@ -239,6 +239,74 @@ test('`test ruby-app` returns correct meta',  async (t) => {
   t.match(meta[4], /Project path:\s+ruby-app/, 'path displayed');
   t.notMatch(meta[5], /Local Snyk policy:\s+found/,
     'local policy not displayed');
+});
+
+test('`test ruby-app`',  async (t) => {
+  chdirWorkspaces();
+
+  server.setNextResponse(
+    require('./workspaces/ruby-app/test-graph-result.json'));
+
+  try {
+    await cli.test('ruby-app');
+    t.fail('should have thrown');
+  } catch (err) {
+    const res = err.message;
+
+    t.match(res,
+      'Tested 2 dependencies for known vulnerabilities, found 2 vulnerabilities, 2 vulnerable paths',
+      '2 vulns');
+
+    var meta = res.slice(res.indexOf('Organisation:')).split('\n');
+    t.match(meta[0], /Organisation:\s+test-org/, 'organisation displayed');
+    t.match(meta[1], /Package manager:\s+rubygems/,
+      'package manager displayed');
+    t.match(meta[2], /Target file:\s+Gemfile/, 'target file displayed');
+    t.match(meta[3], /Open source:\s+no/, 'open source displayed');
+    t.match(meta[4], /Project path:\s+ruby-app/, 'path displayed');
+    t.notMatch(meta[5], /Local Snyk policy:\s+found/,
+      'local policy not displayed');
+  }
+});
+
+test('`test ruby-app --severity-threshold=medium`',  async (t) => {
+  chdirWorkspaces();
+
+  server.setNextResponse(
+    require('./workspaces/ruby-app/test-graph-result.json'));
+
+  try {
+    await cli.test('ruby-app', {
+      severityThreshold: 'medium',
+    });
+    t.fail('should have thrown');
+  } catch (err) {
+    const res = err.message;
+
+    t.match(res,
+      'Tested 2 dependencies for known vulnerabilities, found 2 vulnerabilities, 2 vulnerable paths',
+      '2 vulns');
+  }
+});
+
+test('`test ruby-app --severity-threshold=high',  async (t) => {
+  chdirWorkspaces();
+
+  server.setNextResponse(
+    require('./workspaces/ruby-app/test-graph-result.json'));
+
+  try {
+    await cli.test('ruby-app', {
+      severityThreshold: 'high',
+    });
+    t.fail('should have thrown');
+  } catch (err) {
+    const res = err.message;
+
+    t.match(res,
+      'Tested 2 dependencies for known vulnerabilities, found 1 vulnerability, 1 vulnerable path',
+      '1 vulns');
+  }
 });
 
 test('`test gradle-app` returns correct meta', function (t) {
@@ -262,26 +330,6 @@ test('`test gradle-app` returns correct meta', function (t) {
     t.match(meta[2], /Target file:\s+build.gradle/, 'target file displayed');
     t.match(meta[3], /Open source:\s+no/, 'open source displayed');
     t.match(meta[4], /Project path:\s+gradle-app/, 'path displayed');
-    t.notMatch(meta[5], /Local Snyk policy:\s+found/,
-      'local policy not displayed');
-  });
-});
-
-test('`test` returns correct meta for a vulnerable result', function (t) {
-  chdirWorkspaces();
-  return cli.test('ruby-app', { org: 'org-with-vulns' })
-  .then(() => {
-    t.fail('should have rejected!');
-  })
-  .catch(function (res) {
-    var meta = res.message.slice(res.message.indexOf('Organisation:'))
-      .split('\n');
-    t.match(meta[0], /Organisation:\s+test-org/, 'organisation displayed');
-    t.match(meta[1], /Package manager:\s+rubygems/,
-      'package manager displayed');
-    t.match(meta[2], /Target file:\s+Gemfile/, 'target file displayed');
-    t.match(meta[3], /Open source:\s+no/, 'open source displayed');
-    t.match(meta[4], /Project path:\s+ruby-app/, 'path displayed');
     t.notMatch(meta[5], /Local Snyk policy:\s+found/,
       'local policy not displayed');
   });
