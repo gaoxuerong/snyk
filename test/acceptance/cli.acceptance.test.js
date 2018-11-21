@@ -1404,6 +1404,7 @@ only('`test sbt-simple-struts`', async (t) => {
 
   // TODO(michael-go): this doesn't really stub what's needed ...
   // stubExec(t, 'sbt-simple-struts/sbt-dep-tree-stdout.txt');
+
   server.setNextResponse(
     require('./workspaces/sbt-simple-struts/test-graph-result.json'));
 
@@ -1418,10 +1419,17 @@ only('`test sbt-simple-struts`', async (t) => {
     const expected =
       require('./workspaces/sbt-simple-struts/legacy-res-json.json');
 
-    t.same(
-      _.omit(res, ['vulnerabilities']),
-      _.omit(expected, ['vulnerabilities']),
+    t.deepEqual(
+      _.omit(res, ['vulnerabilities', 'packageManager']),
+      _.omit(expected, ['vulnerabilities', 'packageManager']),
       'metadata is ok');
+    // NOTE: decided to keep this discrepancy
+    t.is(res.packageManager, 'sbt',
+      'pacakgeManager is sbt, altough it was mavn with the legacy api');
+    t.deepEqual(
+      _.sortBy(res.vulnerabilities, 'id'),
+      _.sortBy(expected.vulnerabilities, 'id'),
+      'vulns are the same');
   }
 });
 
