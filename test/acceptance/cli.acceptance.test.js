@@ -338,6 +338,34 @@ test('`test ruby-app-thresholds --severity-threshold=high --json`', async (t) =>
   }
 });
 
+test('`test ruby-app-policy`', async (t) => {
+  chdirWorkspaces();
+
+  server.setNextResponse(
+    require('./workspaces/ruby-app-policy/test-graph-result.json'));
+
+  try {
+    await cli.test('ruby-app-policy', {
+      json: true,
+    });
+    t.fail('should have thrown');
+  } catch (err) {
+    const res = JSON.parse(err.message);
+
+    const expected =
+      require('./workspaces/ruby-app-policy/legacy-res-json.json');
+
+    t.deepEqual(
+      _.omit(res, ['vulnerabilities']),
+      _.omit(expected, ['vulnerabilities']),
+      'metadata is ok');
+    t.deepEqual(
+      _.sortBy(res.vulnerabilities, 'id'),
+      _.sortBy(expected.vulnerabilities, 'id'),
+      'vulns are the same');
+  }
+});
+
 test('`test gradle-app` returns correct meta', function (t) {
   chdirWorkspaces();
   var plugin = {
