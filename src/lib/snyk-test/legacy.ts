@@ -59,7 +59,7 @@ function convertTestDepGraphResultToLegacy(
         issues[issueId].fixInfo.upgradePaths.forEach((upgradePath) => {
           const key = getIssueWithVulnPathStr(
             issueId,
-            upgradePath.path.map(toPkgId));
+            upgradePath.path.map(toLegacyPkgId));
           // TODO: check if key already exists in upgradePathsMap?
           upgradePathsMap[key] = toLegacyUpgradePath(upgradePath.path);
         });
@@ -143,7 +143,7 @@ function getIssueWithVulnPathStr(issueId, vulnPath) {
 // TODO: rename
 function getLegacyFromPath(vulnPath) {
   return vulnPath.slice().reverse().map((pkg) => {
-    return toPkgId(pkg);
+    return toLegacyPkgId(pkg);
   });
 }
 
@@ -159,8 +159,8 @@ function toLegacyUpgradePath(upgradePath) {
     });
 }
 
-function toPkgId(pkg) {
-  return `${pkg.name}@${pkg.version || null}`; // TODO: null or '' ?
+function toLegacyPkgId(pkg) {
+  return `${pkg.name}@${pkg.version || '*'}`;
 }
 
 function getSummary(vulns: object[], severityThreshold: string): string {
