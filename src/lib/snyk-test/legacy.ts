@@ -76,20 +76,9 @@ function convertTestDepGraphResultToLegacy(
       Object.keys(depIssues).forEach((issueId) => {
         const fromPath = getLegacyFromPath(vulnPath);
         const key = getIssueWithVulnPathStr(issueId, fromPath);
-        // const partialIssue = _.pick(result.issues[issueId],
-        //   [
-        //     'id',
-        //     'type',
-        //     'title',
-        //     'packageName',
-        //     'moduleName', // still used?
-        //     'semver',
-        //     'severity',
-        //     'name',
-        //     'info',
-        //   ]);
 
-        // TODO: this can cause OOM ...
+        // TODO: we don't need the vuln issue data for all expect '--json'
+        //   and it increases the chance of OOM ...
         //   need to see how to not allocate to much but still create a full `--json` output
 
         const issueData: VulnInfo = result.issues[issueId];
