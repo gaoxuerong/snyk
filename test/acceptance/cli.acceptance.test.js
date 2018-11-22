@@ -325,7 +325,7 @@ test('`test ruby-app-thresholds --severity-threshold=high --json`', async (t) =>
     const res = JSON.parse(err.message);
 
     const expected =
-      require('./workspaces/ruby-app-thresholds/legacy-res-json.json');
+      require('./workspaces/ruby-app-thresholds/legacy-res-json-high-severity.json');
 
     t.deepEqual(
       _.omit(res, ['vulnerabilities']),
