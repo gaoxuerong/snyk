@@ -43,6 +43,8 @@ interface LegacyVulnApiResult {
   severityThreshold: string;
 }
 
+const SEVERITIES = [ 'low', 'medium', 'high' ];
+
 function convertTestDepGraphResultToLegacy(
     res, depGraph: depGraphLib.DepGraph, packageManager: string, severityThreshold: string): LegacyVulnApiResult {
 
@@ -123,7 +125,7 @@ function convertTestDepGraphResultToLegacy(
     licensesPolicy: meta.licensesPolicy,
     packageManager, // TODO: seems /vuln API returns `maven` for `gradle` here?
     ignoreSettings: meta.ignoreSettings,
-    summary: getSummary(vulnerabilities),
+    summary: getSummary(vulnerabilities, severityThreshold),
     severityThreshold,
   };
 
@@ -161,30 +163,27 @@ function toPkgId(pkg) {
   return `${pkg.name}@${pkg.version || null}`; // TODO: null or '' ?
 }
 
-function getSummary(vulns) {
+function getSummary(vulns: object[], severityThreshold: string): string {
   const count = vulns.length;
-  const countText = count;
-  // TODO(michael-go): handle severityThreshold
-  // const severityFilters = [];
-  // const newString = res.policy === 'only_new' ? 'new ' : '';
-  // if (res.severityThreshold) {
-  //   SEVERITIES.slice(SEVERITIES.indexOf(res.severityThreshold)).forEach((sev) => {
-  //     severityFilters.push(sev);
-  //   });
-  // }
+  let countText = '' + count;
+  const severityFilters: string[] = [];
+
+  if (severityThreshold) {
+    SEVERITIES.slice(SEVERITIES.indexOf(severityThreshold)).forEach((sev) => {
+      severityFilters.push(sev);
+    });
+  }
 
   if (!count) {
-    // TODO(michael-go): handle severityThreshold
-    // if (severityFilters.length) {
-    //   return `No ${newString}${severityFilters.join(' or ')} severity vulnerabilities`;
-    // }
+    if (severityFilters.length) {
+      return `No ${severityFilters.join(' or ')} severity vulnerabilities`;
+    }
     return 'No known vulnerabilities';
   }
 
-  // TODO(michael-go): handle severityThreshold
-  // if (severityFilters.length) {
-  //   countText += ' ' + severityFilters.join(' or ') + ' severity';
-  // }
+  if (severityFilters.length) {
+    countText += ' ' + severityFilters.join(' or ') + ' severity';
+  }
 
   return `${countText} vulnerable dependency ${pl('path', count)}`;
 }
@@ -205,7 +204,6 @@ function pl(word, count) {
 }
 
 function filterVulnsBySeverityThreshold(vulns, severityThreshold) {
-  const SEVERITIES = [ 'low', 'medium', 'high' ];
   if (!severityThreshold || severityThreshold === SEVERITIES[0]) {
     // no filtering necessary
     return { vulns };

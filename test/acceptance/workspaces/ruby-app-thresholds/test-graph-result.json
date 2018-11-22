@@ -52,7 +52,7 @@
                 {
                   "path": [
                     {
-                      "name": "ruby-app-2",
+                      "name": "ruby-app-thresholds",
                       "version": null
                     },
                     {
@@ -81,7 +81,7 @@
                 {
                   "path": [
                     {
-                      "name": "ruby-app-2",
+                      "name": "ruby-app-thresholds",
                       "version": null
                     },
                     {
@@ -102,7 +102,7 @@
                 {
                   "path": [
                     {
-                      "name": "ruby-app-2",
+                      "name": "ruby-app-thresholds",
                       "version": null
                     },
                     {
