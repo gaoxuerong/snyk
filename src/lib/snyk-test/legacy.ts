@@ -85,12 +85,13 @@ function convertTestDepGraphResultToLegacy(
 
         const upgradePath = upgradePathsMap[key] || [];
         const annotatedIssue: AnnotatedIssue = Object.assign({}, issueData, {
-          upgradePath,
+          // note: keep the same key order as legacy
           from: fromPath,
+          upgradePath,
+          version: pkg.version,
+          name: pkg.name,
           isUpgradable: !!upgradePath[0] || !!upgradePath[1],
           isPatchable: depIssues[issueId].fixInfo.isPatchable, // TODO: test this
-          name: pkg.name,
-          version: pkg.version,
         });
 
         vulnerabilities.push(annotatedIssue);
