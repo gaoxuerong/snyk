@@ -205,12 +205,12 @@ async function assembleLocalPayload(root, options, policyLocations): Promise<Pay
       },
       qs: common.assembleQueryString(options),
       body: {
-        depGraph,
-        policy: policy && policy.toString(),
-        isDocker: !!options.docker,
-        docker: pkg.docker,
-        projectNameOverride: options.projectName,
+        // note: keep a pleasing key order
         targetFile: pkg.targetFile || options.file,
+        projectNameOverride: options.projectName,
+        policy: policy && policy.toString(),
+        docker: pkg.docker,
+        depGraph,
       },
     };
 
