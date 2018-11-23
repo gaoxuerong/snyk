@@ -81,7 +81,6 @@ interface Payload {
     policy: string;
     targetFile?: string;
     projectNameOverride?: string;
-    isDocker?: boolean;
     docker?: any;
   };
   qs?: object | null;
