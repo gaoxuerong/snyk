@@ -412,6 +412,28 @@ test('`test ruby-app-no-vulns`', async (t) => {
   t.deepEqual(res, expected, '--json output is the same');
 });
 
+test('`test ruby-app-no-vulns`', async (t) => {
+  chdirWorkspaces();
+
+  const apiResponse = Object.assign(
+    {}, require('./workspaces/ruby-app-no-vulns/test-graph-result.json'));
+  apiResponse.meta.isPublic = true;
+  server.setNextResponse(apiResponse);
+
+  const outText = await cli.test('ruby-app-no-vulns', {
+    json: true,
+  });
+
+  const res = JSON.parse(outText);
+
+  const expected = Object.assign(
+    {},
+    require('./workspaces/ruby-app-no-vulns/legacy-res-json.json'),
+    {isPrivate: false});
+
+  t.deepEqual(res, expected, '--json output is the same');
+});
+
 test('`test gradle-app` returns correct meta', function (t) {
   chdirWorkspaces();
   var plugin = {
