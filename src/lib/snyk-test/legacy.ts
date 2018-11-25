@@ -43,8 +43,6 @@ interface LegacyVulnApiResult {
   severityThreshold: string;
 }
 
-const SEVERITIES = [ 'low', 'medium', 'high' ];
-
 function convertTestDepGraphResultToLegacy(
     res, depGraph: depGraphLib.DepGraph, packageManager: string, severityThreshold: string): LegacyVulnApiResult {
 
@@ -67,7 +65,7 @@ function convertTestDepGraphResultToLegacy(
     });
   });
 
-  let vulnerabilities: AnnotatedIssue[] = [];
+  const vulnerabilities: AnnotatedIssue[] = [];
   Object.keys(result.affectedPkgs).forEach((pkgId) => {
     const pkg = result.affectedPkgs[pkgId].pkg;
     const depIssues = result.affectedPkgs[pkgId].issues;
@@ -98,10 +96,6 @@ function convertTestDepGraphResultToLegacy(
       });
     });
   });
-
-  if (severityThreshold) {
-    vulnerabilities = filterVulnsBySeverityThreshold(vulnerabilities, severityThreshold).vulns;
-  }
 
   const meta = res.meta || {};
 
@@ -158,6 +152,8 @@ function getSummary(vulns: object[], severityThreshold: string): string {
   let countText = '' + count;
   const severityFilters: string[] = [];
 
+  const SEVERITIES = ['low', 'medium', 'high'];
+
   if (severityThreshold) {
     SEVERITIES.slice(SEVERITIES.indexOf(severityThreshold)).forEach((sev) => {
       severityFilters.push(sev);
@@ -191,23 +187,4 @@ function pl(word, count) {
   }
 
   return word;
-}
-
-function filterVulnsBySeverityThreshold(vulns, severityThreshold) {
-  if (!severityThreshold || severityThreshold === SEVERITIES[0]) {
-    // no filtering necessary
-    return { vulns };
-  }
-  // TODO(michael-go): fail here
-  // if (!validateSeverityThreshold(severityThreshold)) {
-  //   logger.warn({}, `Invalid severity threshold: ${severityThreshold}`);
-  //   throw new BadRequestError('Invalid severity threshold.');
-  // }
-
-  const severities = SEVERITIES.slice(SEVERITIES.indexOf(severityThreshold));
-  const filteredVulns = _.filter(vulns, (vuln) => {
-    return (severities.indexOf(vuln.severity) > -1);
-  });
-
-  return { vulns: filteredVulns, severityThreshold };
 }

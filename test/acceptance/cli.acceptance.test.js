@@ -273,7 +273,7 @@ test('`test ruby-app-thresholds --severity-threshold=medium`', async (t) => {
   chdirWorkspaces();
 
   server.setNextResponse(
-    require('./workspaces/ruby-app-thresholds/test-graph-result.json'));
+    require('./workspaces/ruby-app-thresholds/test-graph-result-medium-severity.json'));
 
   try {
     await cli.test('ruby-app-thresholds', {
@@ -281,6 +281,9 @@ test('`test ruby-app-thresholds --severity-threshold=medium`', async (t) => {
     });
     t.fail('should have thrown');
   } catch (err) {
+    var req = server.popRequest();
+    t.is(req.query.severityThreshold, 'medium');
+
     const res = err.message;
 
     t.match(res,
@@ -289,11 +292,43 @@ test('`test ruby-app-thresholds --severity-threshold=medium`', async (t) => {
   }
 });
 
+test('`test ruby-app-thresholds --severity-threshold=medium --json`', async (t) => {
+  chdirWorkspaces();
+
+  server.setNextResponse(
+    require('./workspaces/ruby-app-thresholds/test-graph-result-medium-severity.json'));
+
+  try {
+    await cli.test('ruby-app-thresholds', {
+      severityThreshold: 'medium',
+      json: true,
+    });
+    t.fail('should have thrown');
+  } catch (err) {
+    var req = server.popRequest();
+    t.is(req.query.severityThreshold, 'medium');
+
+    const res = JSON.parse(err.message);
+
+    const expected =
+      require('./workspaces/ruby-app-thresholds/legacy-res-json-medium-severity.json');
+
+    t.deepEqual(
+      _.omit(res, ['vulnerabilities']),
+      _.omit(expected, ['vulnerabilities']),
+      'metadata is ok');
+    t.deepEqual(
+      _.sortBy(res.vulnerabilities, 'id'),
+      _.sortBy(expected.vulnerabilities, 'id'),
+      'vulns are the same');
+  }
+});
+
 test('`test ruby-app-thresholds --severity-threshold=high', async (t) => {
   chdirWorkspaces();
 
   server.setNextResponse(
-    require('./workspaces/ruby-app-thresholds/test-graph-result.json'));
+    require('./workspaces/ruby-app-thresholds/test-graph-result-high-severity.json'));
 
   try {
     await cli.test('ruby-app-thresholds', {
@@ -301,6 +336,9 @@ test('`test ruby-app-thresholds --severity-threshold=high', async (t) => {
     });
     t.fail('should have thrown');
   } catch (err) {
+    var req = server.popRequest();
+    t.is(req.query.severityThreshold, 'high');
+
     const res = err.message;
 
     t.match(res,
@@ -313,7 +351,7 @@ test('`test ruby-app-thresholds --severity-threshold=high --json`', async (t) =>
   chdirWorkspaces();
 
   server.setNextResponse(
-    require('./workspaces/ruby-app-thresholds/test-graph-result.json'));
+    require('./workspaces/ruby-app-thresholds/test-graph-result-high-severity.json'));
 
   try {
     await cli.test('ruby-app-thresholds', {
@@ -322,6 +360,9 @@ test('`test ruby-app-thresholds --severity-threshold=high --json`', async (t) =>
     });
     t.fail('should have thrown');
   } catch (err) {
+    var req = server.popRequest();
+    t.is(req.query.severityThreshold, 'high');
+
     const res = JSON.parse(err.message);
 
     const expected =
