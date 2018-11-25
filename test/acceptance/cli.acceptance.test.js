@@ -394,6 +394,24 @@ test('`test ruby-app-policy` with cloud ignores', async (t) => {
   }
 });
 
+test('`test ruby-app-no-vulns`', async (t) => {
+  chdirWorkspaces();
+
+  server.setNextResponse(
+    require('./workspaces/ruby-app-no-vulns/test-graph-result.json'));
+
+  const outText = await cli.test('ruby-app-no-vulns', {
+    json: true,
+  });
+
+  const res = JSON.parse(outText);
+
+  const expected =
+    require('./workspaces/ruby-app-no-vulns/legacy-res-json.json');
+
+  t.deepEqual(res, expected, '--json output is the same');
+});
+
 test('`test gradle-app` returns correct meta', function (t) {
   chdirWorkspaces();
   var plugin = {
