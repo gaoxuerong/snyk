@@ -40,11 +40,14 @@ interface LegacyVulnApiResult {
   packageManager: string;
   ignoreSettings: object;
   summary: string;
-  severityThreshold: string;
+  severityThreshold?: string;
 }
 
 function convertTestDepGraphResultToLegacy(
-    res, depGraph: depGraphLib.DepGraph, packageManager: string, severityThreshold: string): LegacyVulnApiResult {
+    res,
+    depGraph: depGraphLib.DepGraph,
+    packageManager: string,
+    severityThreshold?: string): LegacyVulnApiResult {
 
   const result = res.result;
 
@@ -99,6 +102,8 @@ function convertTestDepGraphResultToLegacy(
 
   const meta = res.meta || {};
 
+  severityThreshold = (severityThreshold === 'low') ? undefined : severityThreshold;
+
   const legacyRes: LegacyVulnApiResult = {
     vulnerabilities,
     ok: vulnerabilities.length === 0,
@@ -147,7 +152,7 @@ function toLegacyPkgId(pkg) {
   return `${pkg.name}@${pkg.version || '*'}`;
 }
 
-function getSummary(vulns: object[], severityThreshold: string): string {
+function getSummary(vulns: object[], severityThreshold?: string): string {
   const count = vulns.length;
   let countText = '' + count;
   const severityFilters: string[] = [];

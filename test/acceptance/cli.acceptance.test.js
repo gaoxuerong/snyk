@@ -269,6 +269,38 @@ test('`test ruby-app-thresholds`', async (t) => {
   }
 });
 
+test('`test ruby-app-thresholds --severity-threshold=low --json`', async (t) => {
+  chdirWorkspaces();
+
+  server.setNextResponse(
+    require('./workspaces/ruby-app-thresholds/test-graph-result-low-severity.json'));
+
+  try {
+    await cli.test('ruby-app-thresholds', {
+      severityThreshold: 'low',
+      json: true,
+    });
+    t.fail('should have thrown');
+  } catch (err) {
+    var req = server.popRequest();
+    t.is(req.query.severityThreshold, 'low');
+
+    const res = JSON.parse(err.message);
+
+    const expected =
+      require('./workspaces/ruby-app-thresholds/legacy-res-json-low-severity.json');
+
+    t.deepEqual(
+      _.omit(res, ['vulnerabilities']),
+      _.omit(expected, ['vulnerabilities']),
+      'metadata is ok');
+    t.deepEqual(
+      _.sortBy(res.vulnerabilities, 'id'),
+      _.sortBy(expected.vulnerabilities, 'id'),
+      'vulns are the same');
+  }
+});
+
 test('`test ruby-app-thresholds --severity-threshold=medium`', async (t) => {
   chdirWorkspaces();
 
